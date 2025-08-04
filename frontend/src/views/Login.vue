@@ -3,99 +3,113 @@
     <div class="login-card">
       <h2>Login</h2>
 
-      <form @submit.prevent="handleLogin">
+      <Form @submit="onSubmit" :validation-schema="loginSchema">
         <div class="form-group">
           <label for="username">Username</label>
-          <input
-            type="text"
-            id="username"
-            v-model="username"
-            required
+          <Field
+            name="username"
             placeholder="Enter your username"
+            class="input"
           />
+          <ErrorMessage name="username" class="error" />
         </div>
 
         <div class="form-group">
           <label for="password">Password</label>
           <div class="password-wrapper">
-            <input
+            <Field
               :type="showPassword ? 'text' : 'password'"
-              id="password"
-              v-model="password"
-              required
+              name="password"
               placeholder="Enter your password"
+              class="input"
             />
             <span class="eye-icon" @click="togglePassword">
               <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
             </span>
           </div>
+          <ErrorMessage name="password" class="error" />
         </div>
 
         <div class="form-links">
           <router-link to="/forgot-password">Forgot Password?</router-link>
         </div>
 
-        <button type="submit">Login</button>
+        <p v-if="error" class="error">{{ error }}</p>
+
+        <button type="submit" :disabled="loading">
+  {{ loading ? 'Logging in...' : 'Login' }}
+</button>
 
         <p class="register-link">
           Don't have an account?
           <router-link to="/register">Register</router-link>
         </p>
-
-        <p v-if="error" class="error">{{ error }}</p>
-      </form>
+      </Form>
     </div>
   </div>
 </template>
+
+
 
 <script>
 import axios from '../axios';
 import { useRouter } from 'vue-router';
 import { ref } from 'vue';
+import { Form, Field, ErrorMessage } from 'vee-validate';
+import * as yup from 'yup';
 
 export default {
+  components: {
+    Form,
+    Field,
+    ErrorMessage,
+  },
   setup() {
-    const username = ref('');
-    const password = ref('');
     const showPassword = ref(false);
     const error = ref('');
     const router = useRouter();
+    const loading = ref(false);
 
     const togglePassword = () => {
       showPassword.value = !showPassword.value;
     };
 
-    const handleLogin = async () => {
-      const User= {
-        userName: username.value,
-      password: password.value};
-      console.log(User);
+    const loginSchema = yup.object({
+      username: yup.string().required('Username is required'),
+      password: yup.string().required('Password is required'),
+    });
+
+    const onSubmit = async (values) => {
+      loading.value = true;
+      error.value = '';
       try {
         const response = await axios.post('auth/login', {
-          userName: username.value,
-          password: password.value
+          userName: values.username,
+          password: values.password,
         });
-        
+
         const token = response.data['Token: '];
         localStorage.setItem('token', token);
-
         router.push('/dashboard');
       } catch (err) {
-        error.value = err.response.data['Error: '] || 'Login failed';
-      }
+        error.value = err?.response?.data?.['Error: '] || 'Login failed';
+      }finally {
+    loading.value = false;
+  }
     };
 
     return {
-      username,
-      password,
       showPassword,
       togglePassword,
       error,
-      handleLogin,
+      onSubmit,
+      loginSchema,
+      loading
     };
   },
 };
 </script>
+
 
 <!--<style scoped>
 
@@ -179,7 +193,10 @@ label {
 }
 
 input[type="text"],
-input[type="password"] {
+input[type="password"],
+input,
+.field,
+.Field {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid #ccc;
@@ -212,8 +229,14 @@ button {
   margin-top: 10px;
 }
 
+
 button:hover {
   background-color: #0056b3;
+}
+
+button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .form-links {

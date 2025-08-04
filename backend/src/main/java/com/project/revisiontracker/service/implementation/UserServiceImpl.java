@@ -7,6 +7,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.project.revisiontracker.entity.Users;
+import com.project.revisiontracker.exceptions.UsernameAlreadyExistsException;
 import com.project.revisiontracker.repository.UserRepository;
 import com.project.revisiontracker.service.UserService;
 
@@ -16,10 +17,17 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	UserRepository userRepo;
 	
+	
 	@Override
 	public Users registerUser(Users user) {
-		user.setPassword(new BCryptPasswordEncoder(12).encode(user.getPassword()));
+		Optional<Users> existingUser=userRepo.findByUserName(user.getUserName());
+		if( !existingUser.isEmpty()) {
+			throw new UsernameAlreadyExistsException(user.getUserName());
+		}
+		else 
+			user.setPassword(new BCryptPasswordEncoder(12).encode(user.getPassword()));
 		 return userRepo.save(user);
+		
 	}
 
 	@Override
