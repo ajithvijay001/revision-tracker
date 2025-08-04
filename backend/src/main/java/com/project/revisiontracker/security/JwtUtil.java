@@ -40,15 +40,10 @@ public class JwtUtil {
 	}
 	
 	public String extractUserName(String token) {
-		try {
 			return Jwts.parser().verifyWith(getKey())
 			.build()
 			.parseSignedClaims(token)
 			.getPayload().getSubject();
-		} catch(JwtException e) {
-			System.out.println("Invalid Jwt "+ e.getMessage());
-			return null;
-		}
 	}	
 	
 //	public Integer extractUserId(String token) {

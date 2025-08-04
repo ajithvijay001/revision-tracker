@@ -7,11 +7,13 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
 
 import com.project.revisiontracker.entity.Users;
 import com.project.revisiontracker.repository.UserRepository;
 import com.project.revisiontracker.security.CustomUserDetails;
 
+@Service
 public class CustomUserDetailsService implements UserDetailsService {
 	
 	@Autowired
